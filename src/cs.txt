@@ -1,0 +1,145 @@
+2005-01-09:
+Updated to 12x10 c.s. So Knight moves don't require special treatment, E.B.
+
+2003-11-24:
+
+Coordinate System.
+
+The board is represented by a one-dimensional array of bytes with
+indices going from 0 to 121. Of these 120 elements 64 are used for
+storing the chessboard and the rest are marked as "OFFBOARD".
+
+
+
+     110 111 112 113 114 115 116 117 118 119
+
+     100 101 102 133 104 105 106 107 108 109
+         +-------------------------------+
+  8   90 |91  92  93  94  95  96  97  98 |99
+         |                               |
+  7   80 |81  82  83  84  85  86  87  88 |89
+         |                               |
+  6   70 |71  72  73  74  75  76  77  78 |79
+         |                               |
+  5   60 |61  62  63  64  65  66  67  68 |69
+         |                               |
+  4   50 |51  52  53  54  55  56  57  58 |59
+         |                               |
+  3   40 |41  42  43  44  45  46  47  48 |49
+         |                               |
+  2   30 |31  32  33  34  35  36  37  38 |39
+         |                               |
+  1   20 |21  22  23  24  25  26  27  28 |29
+         +-------------------------------+
+      10  11  12  13  14  15  16  17  18  19
+
+       0   1   2   3   4   5   6   7   8   9
+
+           A   B   C   D   E   F   G   H
+
+
+
+So a1 has index 21, h8 has index 98.
+
+A square (index) is white if (i / 10) % 2 != i % 2
+or ((i / 10) ^ i) & 1 == 1
+
+Moves in Base-120 coordinates(tm).
+
+Knight: c - 21, c - 19, c - 12, c - 8, c + 8, c + 12, c + 19, c + 21
+Bishop:	c - 11*n,  c - 9*n,  c + 9*n,  c + 11*n
+Rook:	c - 10*n,  c - (1*)n, c + 10*n,  c + (1*)n
+Pawn:	c + 10 (white)  OR  c - 10 (black).
+
+
+
+
+Encoding of squares:
+
+0	 Free
+
+$ff	 Unavailable (off board).
+
+Piece:	 bits 0-2   xxxx x000	  (free)
+                    xxxx x001	  pawn
+                    xxxx x010	  rook			(torn)
+                    xxxx x011	  knight		(häst)
+                    xxxx x100	  bishop		(löpare)
+                    xxxx x101	  queen
+                    xxxx x110	  king
+                    xxxx x111	  unused.
+
+Color:	 bits 3-4 color of piece:
+		    yyy0 0xxx     (free)
+		    yyy0 1xxx     white			8
+		    yyy1 0xxx     black			16
+		    yyy1 1xxx     (n/a)
+
+### NOT USED ###
+Moved flag: bit 5
+                    yy0x xxxx     Piece has never been moved.
+                    yy1x xxxx     Piece has moved.
+
+En passant flag: bit y
+                    y0xx xxxx     Piece cannot be captured en passant.
+                    y1xx xxxx     Pawn may be captured en passant.
+
+### END OF NOT USED SECTION ###
+====================================================================
+
+Chapter 2.
+Value of chess pieces.
+
+According to:
+http://alex-chess.ecoholiday.com/pieces.htm
+
+The values are as follows:
+
+    King       infinite
+    Queen      9
+    Rook       5
+    Bishop     3
+    Knight     3
+    Pawn       1
+
+According to the two yongsters Kevin & Craig:
+http://www.csbruce.com/~csbruce/chess/report.html
+The values of pieces are:
+
+    King       infinity
+    Queen      9
+    Rook       5
+    Bishop     3.5
+    Knight     3.5
+    Pawn       1
+
+
+Francois Dominic Laramée 
+http://www.gamedev.net/reference/articles/article1208.asp
+Suggests:
+    King       infinity
+    Queen      9
+    Rook       5
+    Bishop     3.25
+    Knight     3
+    Pawn       1
+
+
+Chapter 3
+How many moves can you make from any one position?
+
+A conservative estimate goes like follows:
+a pawn can make   3 different moves.
+ (4? Capture left and right plus one or two forward if on first rank.)
+a rook kan make  14 moves
+a knight can make 8
+a bishop makes   13 at most
+a queen can make 27 and
+a king can make   8 moves.
+8 * 3 + 2 * 14 + 2 * 8 + 2 * 13 + 27 + 8 = 129
+
+I guesstimate that the number of valid moves out of any one position
+on a chessboard will never exceed 128.
+(05-01-09 Wrong! some test positions can generate more than 128 legal moves,
+particularly when there are more than one queen on the board etc. use 256 
+if a limit is necessary, E.B.)
